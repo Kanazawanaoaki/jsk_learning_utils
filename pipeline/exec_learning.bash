@@ -13,10 +13,10 @@ pred_model_name=${comp_model_name}_LSTM_noise_series_batch_e${p_epoch}_h${hidden
 base_path=$(dirname "$(realpath $0)")
 scripts_path=$base_path/../scripts
 
-# python3 ${scripts_path}/rosbag_convert_to_data.py -c ../configs/${config_file} -b ../bags/${bag_name}/ -d ${scripts_path}/data/${data_name}/
-# python3 ${scripts_path}/train_DCAE.py -e ${c_epoch} -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
-# python3 ${scripts_path}/test_DCAE.py -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
-# python3 ${scripts_path}/comp_by_DCAE.py -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
+python3 ${scripts_path}/rosbag_convert_to_data.py -c ../configs/${config_file} -b ../bags/${bag_name}/ -d ${scripts_path}/data/${data_name}/
+python3 ${scripts_path}/train_DCAE.py -e ${c_epoch} -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
+python3 ${scripts_path}/test_DCAE.py -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
+python3 ${scripts_path}/comp_by_DCAE.py -z ${z_dim} -d ${scripts_path}/data/${data_name}/ -m ../models/${comp_model_name}/
 python3 ${scripts_path}/train_LSTM.py -e ${p_epoch} -z ${z_dim} -h ${hidden} -d ${scripts_path}/data/${data_name}/ -m ../models/${pred_model_name}
 
 mkdir_one_line=${scripts_path}/movies
