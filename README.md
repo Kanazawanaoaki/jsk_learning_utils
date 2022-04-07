@@ -50,9 +50,17 @@ roseus pr2_imitation_exec.l
 ```
 
 ## WIP 石田さんの模倣学習への対応
-金沢の模倣学習の`/scripts/data`のデータを石田さんのmohouのデータの形に変換する．
+金沢の模倣学習の`/scripts/data`のデータを石田さんのmohouのデータの形に変換する．  
+石田さんの模倣学習のみをするなら，
 ```
 roscd jsk_learning_utils/scripts
+python3 rosbag_convert_to_data.py -c ../configs/rarm_pr2.yaml -b ../bags/rcup_20220218_pick -d data/rcup_20220218_pick
 python3 convert_data_to_pickle_for_mohou.py -d data/rcup_20220218_pick -n rcup_20220218_pick
 ```
-`-d`:`/scripts/data`以下のデータディレクトリ，`-n`:`~/.mohou`以下に作られるプロジェクトの名前．
+`-d`:`/scripts/data`以下のデータディレクトリ，`-n`:`~/.mohou`以下に作られるプロジェクトの名前．  
+
+既に金沢模倣学習プログラムを実行している場合は`scripts/data`にデータディレクトリが作られているので，
+```
+roscd jsk_learning_utils/scripts
+python3 convert_data_to_pickle_for_mohou.py -d data/rcup_20220218_pick_z10_e100 -n rcup_20220218_pick
+```
