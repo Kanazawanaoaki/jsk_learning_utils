@@ -1,0 +1,5 @@
+*.bag
+*.pyc
+*.mp4
+scripts/data/
+/models/
