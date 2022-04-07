@@ -1,0 +1,31 @@
+<launch>
+  <arg name="collect_data" default="true" />
+
+  <node name="data_collection_rosbag_test"
+        pkg="jsk_data" type="data_collection_server.py"
+	    clear_params="true"
+        output="screen" if="$(arg collect_data)">
+    <rosparam subst_value="true">
+      message_filters: true
+      approximate_sync: true
+      save_dir: $(find imitation_learning_pr2)/bags/
+      method: timer
+      rosbag: true
+      rosbag_topics:
+           - /rosout
+           - /tf
+           - /joint_states
+           - /right_endeffector/wrench
+           - /left_endeffector/wrench
+           - /pr2_state/angle_vector
+           - /pr2_state/rarm_angle_vector
+           - /pr2_state/larm_angle_vector
+           - /pr2_state/rarm_end_coords
+           - /pr2_state/larm_end_coords
+           - /kinect_head/rgb/camera_info
+           - /kinect_head/depth_registered/camera_info
+           - /kinect_head/rgb/image_rect_color/compressed
+           - /kinect_head/depth_registered/image_rect/compressedDepth
+    </rosparam>
+  </node>
+</launch>
