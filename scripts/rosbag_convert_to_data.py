@@ -7,12 +7,43 @@ import matplotlib.pyplot as plt
 import math
 import csv
 import pickle
+import numpy as np
+from dataclasses import dataclass
+from sensor_msgs.msg import JointState
+from typing import List
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from PIL import Image
 
 import config_reader
+
+
+@dataclass
+class AngleVector:
+    data: np.ndarray
+
+    @classmethod
+    def from_ros_msg(cls, msg: JointState, joint_names: List[str]) -> 'AngleVector':
+        joint_rads = []
+        for j_name in joint_names:
+            idx = msg.name.index(j_name)
+            joint_rads.append(msg.position[idx])
+        joint_rads = cls.clamp_rad_list(joint_rads)
+        joint_angles = np.array([math.degrees(rad) for rad in joint_rads])
+        return cls(joint_angles)
+
+    @staticmethod
+    def clamp_rad_list(rad_list) -> List[float]:
+        min_val = -1 * math.pi
+        max_val = math.pi
+        rad_list = map(lambda x: min_val if x < min_val else x, rad_list)
+        rad_list = map(lambda x: max_val if x > max_val else x, rad_list)
+        return list(rad_list)
+
+    def numpy(self) -> np.ndarray:
+        return self.data
+
 
 class RosbagReader(object):
     def __init__(self, bag_dir, data_dir, config):
@@ -30,32 +61,13 @@ class RosbagReader(object):
             os.makedirs(dir_path)
             print("make dir in path: {}".format(dir_path))
 
-    def clamp_rad_list(self,rad_list):
-        min_val = -1 * math.pi
-        max_val = math.pi
-        rad_list = map(lambda x: min_val if x < min_val else x, rad_list)
-        rad_list = map(lambda x: max_val if x > max_val else x, rad_list)
-        return rad_list
-
-    def angle_vector_rad2deg(self,angle_vector):
-        return [math.degrees(rad) for rad in angle_vector]
-
-    def get_angle_from_joint_states(self,joint_states_msg):
-        # とりあえず右腕のangle-vectorを取り出す
-        joint_rads = []
-        for j_name in self.joint_names:
-            idx = joint_states_msg.name.index(j_name)
-            joint_rads.append(joint_states_msg.position[idx])
-        joint_rads = self.clamp_rad_list(joint_rads)
-        joint_angles = self.angle_vector_rad2deg(joint_rads)
-        return joint_angles
 
     def load_rosbag(self):
         self.check_and_make_dir(self.data_dir)
         bag_files = glob.glob(os.path.dirname(os.path.abspath(__file__)) + '/' + self.bag_dir +'*.bag')
         print(bag_files)
 
-        joints_list = []
+        angle_vector_list: List[AngleVector] = []
         img_list = []
         bridge = CvBridge()
         for file_name in bag_files:
@@ -64,7 +76,7 @@ class RosbagReader(object):
             bag_save_dir = self.data_dir+str(file_name[file_name.rfind('/')+1:])+"/"
             self.check_and_make_dir(bag_save_dir)
             bag_img_list = []
-            bag_joints_list = []
+            bag_angle_vector_list = []
 
             # 最初の画像トピックの時間から1/hz秒後にその直前のデータを保存する．
             preb_time = None
@@ -99,9 +111,9 @@ class RosbagReader(object):
                             # plt.pause(0.01)
 
                             # jointの情報を保存
-                            angles = self.get_angle_from_joint_states(preb_joints_msg)
-                            joints_list.append(angles)
-                            bag_joints_list.append(angles)
+                            angles = AngleVector.from_ros_msg(msg, self.joint_names)
+                            angle_vector_list.append(angles)
+                            bag_angle_vector_list.append(angles)
                             # print(type(preb_joints_msg.position[0]))
                             # print(preb_joints_msg.position[0])
                     else:
@@ -110,12 +122,12 @@ class RosbagReader(object):
                     preb_img_msg = msg
                 if topic == "/joint_states":
                     preb_joints_msg = msg
-            print("joint topics : {}, image topics : {}".format(len(bag_joints_list), len(bag_img_list)))
+            print("joint topics : {}, image topics : {}".format(len(bag_angle_vector_list), len(bag_img_list)))
             file_name = bag_save_dir + "joints.csv"
             with open(file_name, 'w') as f:
                 writer =csv.writer(f)
-                for joints in bag_joints_list:
-                    writer.writerow(joints)
+                for angle_vector in angle_vector_list:
+                    writer.writerow(angle_vector.numpy().tolist())
             print("joint saved in {}".format(file_name))
             dump_file = bag_save_dir + "images.txt"
             f = open(dump_file,'wb')
@@ -127,8 +139,8 @@ class RosbagReader(object):
         file_name = self.data_dir + "joints.csv"
         with open(file_name, 'w') as f:
             writer =csv.writer(f)
-            for joints in joints_list:
-                writer.writerow(joints)
+            for angle_vector in angle_vector_list:
+                writer.writerow(angle_vector.numpy().tolist())
         print("joint saved in {}".format(file_name))
         dump_file = self.data_dir + "images.txt"
         f = open(dump_file,'wb')
