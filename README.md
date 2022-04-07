@@ -48,3 +48,11 @@ roseus pr2_imitation_exec.l
 ```
 (start-imitation)
 ```
+
+## WIP 石田さんの模倣学習への対応
+金沢の模倣学習の`/scripts/data`のデータを石田さんのmohouのデータの形に変換する．
+```
+roscd jsk_learning_utils/scripts
+python3 convert_data_to_pickle_for_mohou.py -d data/rcup_20220218_pick -n rcup_20220218_pick
+```
+`-d`:`/scripts/data`以下のデータディレクトリ，`-n`:`~/.mohou`以下に作られるプロジェクトの名前．
