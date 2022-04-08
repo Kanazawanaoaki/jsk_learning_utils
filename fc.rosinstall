@@ -5,4 +5,4 @@
 - git:
     local-name: jsk_learning_utils
     uri: https://github.com/Kanazawanaoaki/jsk_learning_utils.git
-    version: master    
+    version: main
