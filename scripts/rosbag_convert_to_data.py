@@ -111,7 +111,7 @@ class RosbagReader(object):
                             # plt.pause(0.01)
 
                             # jointの情報を保存
-                            angles = AngleVector.from_ros_msg(msg, self.joint_names)
+                            angles = AngleVector.from_ros_msg(preb_joints_msg, self.joint_names)
                             angle_vector_list.append(angles)
                             bag_angle_vector_list.append(angles)
                             # print(type(preb_joints_msg.position[0]))
