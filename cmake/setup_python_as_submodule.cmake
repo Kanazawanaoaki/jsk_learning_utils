@@ -1,4 +1,8 @@
 function(setup_python_as_submodule relative_submodules_dir)
+# NOTE(HiroIshida): ROS's standard is catkin_python_setup. However this builtin cmake function 
+# append the sys.path "run time". On ther other hand, this cmake function creates symlink of 
+# python submodules to your_ws/devel/.private/python3/dist_packages/jsk_learning_utils "build time"
+# Thus, we can take advantage of modern python tools such as linter and mypy, all of which are "static" tools.
 
   if(ARGN)
     message(FATAL_ERROR "catkin_python_setup() called with unused arguments: ${ARGN}")
