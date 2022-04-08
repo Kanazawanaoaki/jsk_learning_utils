@@ -17,7 +17,7 @@ class Config(object):
                  rosbag_convert_hz,
                  joint_states_topic,
                  image_topic,
-                 control_joint_names,
+                 control_joints,
                  init_joint_names,
                  init_joint_angles,
                  image_config,
@@ -25,7 +25,7 @@ class Config(object):
         self.rosbag_convert_hz = rosbag_convert_hz
         self.joint_states_topic = joint_states_topic
         self.image_topic = image_topic
-        self.control_joint_names = control_joint_names
+        self.control_joints = control_joints
         self.init_joint_names = init_joint_names
         self.init_joint_angles = init_joint_angles
         self.image_config = ImageConfig(image_config)
@@ -37,7 +37,7 @@ def construct_config(config_file):
             rosbag_convert_hz = dic['rosbag_convert_hz'],
             joint_states_topic = dic['joint_states_topic'],
             image_topic = dic['image_topic'],
-            control_joint_names = dic['control_joint_names'],
+            control_joints = dic['control_joints'],
             init_joint_names = dic['init_joint_names'],
             init_joint_angles = dic['init_joint_angles'],
             image_config = dic['image_config']
