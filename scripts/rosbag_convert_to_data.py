@@ -126,7 +126,7 @@ class RosbagReader(object):
             file_name = bag_save_dir + "joints.csv"
             with open(file_name, 'w') as f:
                 writer =csv.writer(f)
-                for angle_vector in angle_vector_list:
+                for angle_vector in bag_angle_vector_list:
                     writer.writerow(angle_vector.numpy().tolist())
             print("joint saved in {}".format(file_name))
             dump_file = bag_save_dir + "images.txt"
