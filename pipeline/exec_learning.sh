@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 bag_name=rcup_20220218_pick
 config_file=rarm_pr2.yaml
