@@ -3,6 +3,28 @@ JSKのロボットで模倣学習等を行うための関連プログラム．
 基本的にPython3を使う．  
 ロボットでのデータ収集関連とrosbagからのデータ変換，学習したモデルを実行するためのROSプログラムなど．
 
+## Workspace build(melodic)
+Build ROS with Python3 environment  
+Environment:  Ubuntu18.04 and ROS Melodic
+```
+sudo apt-get install python3-catkin-pkg-modules python3-rospkg-modules python3-venv python3-empy
+sudo apt-get install python3-opencv
+sudo apt-get install ros-melodic-catkin
+source /opt/ros/melodic/setup.bash
+mkdir -p ~/learning_ws/src
+cd ~/learning_ws/src
+git clone https://github.com/Kanazawanaoaki/jsk_learning_utils.git
+wstool init
+wstool merge jsk_learning_utils/fc.rosinstall
+wstool merge jsk_learning_utils/fc.rosinstall.melodic
+wstool update
+rosdep install --from-paths . --ignore-src -y -r
+cd ~/learning_ws
+catkin init
+catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
+catkin build
+```
+
 ## WIP 金沢のPR2の模倣学習
 一時的に金沢の模倣学習の実行方法を書いておく．未完成だし，dataの保存方法（特にDCAEで圧縮したデータの保存方法）など諸々検討が必要．
 
