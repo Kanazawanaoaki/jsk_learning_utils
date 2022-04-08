@@ -9,12 +9,12 @@ import csv
 import pickle
 import numpy as np
 from dataclasses import dataclass
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, CompressedImage
 from typing import List
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
-from PIL import Image
+import PIL
 
 import config_reader
 
@@ -44,6 +44,21 @@ class AngleVector:
     def numpy(self) -> np.ndarray:
         return self.data
 
+@dataclass
+class RGBImage:
+    data: PIL.Image
+
+    @classmethod
+    def from_ros_msg(cls, msg: CompressedImage, image_config: config_reader.ImageConfig) -> 'RGBImage':
+        bridge = CvBridge()
+        cv2_img = bridge.compressed_imgmsg_to_cv2(msg)
+        cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+        cv2_img_rgb_cropped = cv2_img_rgb[image_config.x_min:image_config.x_max, image_config.y_min:image_config.y_max, :]
+        pil_img = PIL.Image.fromarray(cv2_img_rgb_cropped)
+        return cls(pil_img)
+
+    def pil_image(self) -> PIL.Image:
+        return self.data
 
 class RosbagReader(object):
     def __init__(self, bag_dir, data_dir, config):
@@ -61,21 +76,19 @@ class RosbagReader(object):
             os.makedirs(dir_path)
             print("make dir in path: {}".format(dir_path))
 
-
     def load_rosbag(self):
         self.check_and_make_dir(self.data_dir)
         bag_files = glob.glob(os.path.dirname(os.path.abspath(__file__)) + '/' + self.bag_dir +'*.bag')
         print(bag_files)
 
         angle_vector_list: List[AngleVector] = []
-        img_list = []
-        bridge = CvBridge()
+        rgb_image_list: List[RGBImage] = []
         for file_name in bag_files:
             bag = rosbag.Bag(file_name)
 
             bag_save_dir = self.data_dir+str(file_name[file_name.rfind('/')+1:])+"/"
             self.check_and_make_dir(bag_save_dir)
-            bag_img_list = []
+            bag_rgb_image_list = []
             bag_angle_vector_list = []
 
             # 最初の画像トピックの時間から1/hz秒後にその直前のデータを保存する．
@@ -93,25 +106,17 @@ class RosbagReader(object):
                             next_save_time += time_span
 
                             # 画像の保存 listに追加と画像でも保存．
-                            img = bridge.compressed_imgmsg_to_cv2(msg)
-                            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                            # crop img tmp !!!!!
-                            img_height, img_width, _ = img_rgb.shape
-                            # img_rgb = img_rgb[100:img_height-50, 150:img_width-150, :]
-                            # img_rgb = img_rgb[40:img_height-110, 160:img_width-140, :]
-                            # img_rgb = img_rgb[175:img_height-25, 175:img_width-175, :]
-                            img_rgb = img_rgb[self.image_config.x_min:self.image_config.x_max, self.image_config.y_min:self.image_config.y_max, :]
-                            pil_img = Image.fromarray(img_rgb)
-                            img_list.append(pil_img)
-                            bag_img_list.append(pil_img)
+                            pil_img = RGBImage.from_ros_msg(msg, self.image_config)
+                            rgb_image_list.append(pil_img)
+                            bag_rgb_image_list.append(pil_img)
                             img_file_name = bag_save_dir + str(preb_time) + ".png"
-                            pil_img.save(img_file_name)
+                            pil_img.pil_image().save(img_file_name)
                             # plt.imshow(pil_img)
                             # plt.draw() # グラフの描画
                             # plt.pause(0.01)
 
                             # jointの情報を保存
-                            angles = AngleVector.from_ros_msg(msg, self.joint_names)
+                            angles = AngleVector.from_ros_msg(preb_joints_msg, self.joint_names)
                             angle_vector_list.append(angles)
                             bag_angle_vector_list.append(angles)
                             # print(type(preb_joints_msg.position[0]))
@@ -122,16 +127,17 @@ class RosbagReader(object):
                     preb_img_msg = msg
                 if topic == "/joint_states":
                     preb_joints_msg = msg
-            print("joint topics : {}, image topics : {}".format(len(bag_angle_vector_list), len(bag_img_list)))
+            print("joint topics : {}, image topics : {}".format(len(bag_angle_vector_list), len(bag_rgb_image_list)))
             file_name = bag_save_dir + "joints.csv"
             with open(file_name, 'w') as f:
                 writer =csv.writer(f)
-                for angle_vector in angle_vector_list:
+                for angle_vector in bag_angle_vector_list:
                     writer.writerow(angle_vector.numpy().tolist())
             print("joint saved in {}".format(file_name))
             dump_file = bag_save_dir + "images.txt"
             f = open(dump_file,'wb')
-            pickle.dump(bag_img_list,f)
+            bag_rgb_image_pil_list = [i.pil_image() for i in bag_rgb_image_list]
+            pickle.dump(bag_rgb_image_pil_list, f)
             f.close
             print("image also saved in {}".format(dump_file))
 
@@ -144,7 +150,8 @@ class RosbagReader(object):
         print("joint saved in {}".format(file_name))
         dump_file = self.data_dir + "images.txt"
         f = open(dump_file,'wb')
-        pickle.dump(img_list,f)
+        rgb_image_pil_list = [i.pil_image() for i in rgb_image_list]
+        pickle.dump(rgb_image_pil_list, f)
         f.close
         print("image also saved in {}".format(dump_file))
 
