@@ -66,6 +66,7 @@ class RosbagReader(object):
         self.data_dir = data_dir
         self.hz = config.rosbag_convert_hz
         self.image_config = config.image_config
+        self.config = config
         print("hz : {}, bag_dir : {}, data_dir : {}".format(self.hz, self.bag_dir, self.data_dir))
         # self.joint_names = ["r_upper_arm_roll_joint","r_shoulder_pan_joint","r_shoulder_lift_joint","r_forearm_roll_joint", "r_elbow_flex_joint","r_wrist_flex_joint","r_wrist_roll_joint"] # joint_states order
         # self.joint_names = ["r_shoulder_pan_joint","r_shoulder_lift_joint","r_upper_arm_roll_joint","r_elbow_flex_joint","r_forearm_roll_joint","r_wrist_flex_joint","r_wrist_roll_joint"] # eus rarm angle-vector order
@@ -97,7 +98,7 @@ class RosbagReader(object):
             next_save_time = None
             time_span = 1.0 / self.hz
             for topic, msg, t in bag.read_messages():
-                if topic == "/kinect_head/rgb/image_rect_color/compressed":
+                if topic == self.config.image_topic:
                     t = msg.header.stamp
                     time = t.secs + 1e-9 * t.nsecs
                     if preb_time:
@@ -125,7 +126,7 @@ class RosbagReader(object):
                         next_save_time = time + time_span
                     preb_time = time
                     preb_img_msg = msg
-                if topic == "/joint_states":
+                if topic == self.config.joint_states_topic:
                     preb_joints_msg = msg
             print("joint topics : {}, image topics : {}".format(len(bag_angle_vector_list), len(bag_rgb_image_list)))
             file_name = bag_save_dir + "joints.csv"

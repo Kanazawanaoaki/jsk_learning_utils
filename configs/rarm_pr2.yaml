@@ -1,4 +1,6 @@
 rosbag_convert_hz: 5
+joint_states_topic: /joint_states
+image_topic: /kinect_head/rgb/image_rect_color/compressed
 control_joint_names: [
     r_shoulder_pan_joint,
     r_shoulder_lift_joint,
