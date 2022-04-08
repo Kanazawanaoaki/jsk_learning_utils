@@ -9,12 +9,12 @@ import csv
 import pickle
 import numpy as np
 from dataclasses import dataclass
-from sensor_msgs.msg import JointState, CompressedImage
-from typing import List
+from sensor_msgs.msg import JointState, CompressedImage, Image
+from typing import List, Union
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
-import PIL
+import PIL.Image
 
 import config_reader
 
@@ -46,10 +46,10 @@ class AngleVector:
 
 @dataclass
 class RGBImage:
-    data: PIL.Image
+    data: PIL.Image.Image
 
     @classmethod
-    def from_ros_msg(cls, msg: CompressedImage, image_config: config_reader.ImageConfig) -> 'RGBImage':
+    def from_ros_msg(cls, msg: Union[CompressedImage, Image], image_config: config_reader.ImageConfig) -> 'RGBImage':
         bridge = CvBridge()
         cv2_img = bridge.compressed_imgmsg_to_cv2(msg)
         cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
@@ -57,7 +57,7 @@ class RGBImage:
         pil_img = PIL.Image.fromarray(cv2_img_rgb_cropped)
         return cls(pil_img)
 
-    def pil_image(self) -> PIL.Image:
+    def pil_image(self) -> PIL.Image.Image:
         return self.data
 
 class RosbagReader(object):
