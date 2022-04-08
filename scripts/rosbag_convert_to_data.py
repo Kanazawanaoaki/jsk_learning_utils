@@ -14,7 +14,7 @@ from typing import List
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
-from PIL import Image
+import PIL
 
 import config_reader
 
@@ -46,7 +46,7 @@ class AngleVector:
 
 @dataclass
 class RGBImage:
-    data: Image
+    data: PIL.Image
 
     @classmethod
     def from_ros_msg(cls, msg: CompressedImage, image_config: config_reader.ImageConfig) -> 'RGBImage':
@@ -54,10 +54,10 @@ class RGBImage:
         cv2_img = bridge.compressed_imgmsg_to_cv2(msg)
         cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
         cv2_img_rgb_cropped = cv2_img_rgb[image_config.x_min:image_config.x_max, image_config.y_min:image_config.y_max, :]
-        pil_img = Image.fromarray(cv2_img_rgb_cropped)
+        pil_img = PIL.Image.fromarray(cv2_img_rgb_cropped)
         return cls(pil_img)
 
-    def Image(self) -> Image:
+    def pil_image(self) -> PIL.Image:
         return self.data
 
 class RosbagReader(object):
@@ -75,7 +75,6 @@ class RosbagReader(object):
         if False == os.path.exists(dir_path):
             os.makedirs(dir_path)
             print("make dir in path: {}".format(dir_path))
-
 
     def load_rosbag(self):
         self.check_and_make_dir(self.data_dir)
@@ -111,7 +110,7 @@ class RosbagReader(object):
                             rgb_image_list.append(pil_img)
                             bag_rgb_image_list.append(pil_img)
                             img_file_name = bag_save_dir + str(preb_time) + ".png"
-                            pil_img.Image().save(img_file_name)
+                            pil_img.pil_image().save(img_file_name)
                             # plt.imshow(pil_img)
                             # plt.draw() # グラフの描画
                             # plt.pause(0.01)
@@ -137,7 +136,7 @@ class RosbagReader(object):
             print("joint saved in {}".format(file_name))
             dump_file = bag_save_dir + "images.txt"
             f = open(dump_file,'wb')
-            bag_rgb_image_pil_list = [i.Image() for i in bag_rgb_image_list]
+            bag_rgb_image_pil_list = [i.pil_image() for i in bag_rgb_image_list]
             pickle.dump(bag_rgb_image_pil_list, f)
             f.close
             print("image also saved in {}".format(dump_file))
@@ -151,7 +150,7 @@ class RosbagReader(object):
         print("joint saved in {}".format(file_name))
         dump_file = self.data_dir + "images.txt"
         f = open(dump_file,'wb')
-        rgb_image_pil_list = [i.Image() for i in rgb_image_list]
+        rgb_image_pil_list = [i.pil_image() for i in rgb_image_list]
         pickle.dump(rgb_image_pil_list, f)
         f.close
         print("image also saved in {}".format(dump_file))
