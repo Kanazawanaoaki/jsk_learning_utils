@@ -14,3 +14,4 @@ if [[ ! -e $bag_zip ]]; then
 fi
 
  rosrun jsk_learning_utils scripts/rosbag_convert_to_data.py
+ rosrun jsk_learning_utils scripts/convert_data_to_pickle_for_mohou.py
