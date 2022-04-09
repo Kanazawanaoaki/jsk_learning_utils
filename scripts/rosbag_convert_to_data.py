@@ -50,12 +50,12 @@ class AngleVector:
         rad = max_val if rad > max_val else rad
         return rad
 
-    def numpy(self) -> np.ndarray:
+    def get_numpy(self) -> np.ndarray:
         return self.data
 
 @dataclass
 class RGBImage:
-    data: PIL.Image.Image
+    data: np.ndarray
 
     @classmethod
     def from_ros_msg(cls, msg: Union[CompressedImage, Image], config: Config) -> 'RGBImage':
@@ -63,10 +63,9 @@ class RGBImage:
         cv2_img = bridge.compressed_imgmsg_to_cv2(msg)
         cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
         cv2_img_rgb_cropped = cv2_img_rgb[config.image_config.x_min:config.image_config.x_max, config.image_config.y_min:config.image_config.y_max, :]
-        pil_img = PIL.Image.fromarray(cv2_img_rgb_cropped)
-        return cls(pil_img)
+        return cls(cv2_img_rgb_cropped)
 
-    def pil_image(self) -> PIL.Image.Image:
+    def get_numpy(self) -> np.ndarray:
         return self.data
 
 class RosbagReader(object):
@@ -112,21 +111,16 @@ class RosbagReader(object):
                             next_save_time += time_span
 
                             # 画像の保存 listに追加と画像でも保存．
-                            pil_img = RGBImage.from_ros_msg(msg, self.config)
-                            rgb_image_list.append(pil_img)
-                            bag_rgb_image_list.append(pil_img)
+                            rgb_image = RGBImage.from_ros_msg(msg, self.config)
+                            rgb_image_list.append(rgb_image)
+                            bag_rgb_image_list.append(rgb_image)
                             img_file_name = bag_save_dir + str(preb_time) + ".png"
-                            pil_img.pil_image().save(img_file_name)
-                            # plt.imshow(pil_img)
-                            # plt.draw() # グラフの描画
-                            # plt.pause(0.01)
+                            PIL.Image.fromarray(rgb_image.get_numpy()).save(img_file_name)
 
                             # jointの情報を保存
                             angles = AngleVector.from_ros_msg(preb_joints_msg, self.config)
                             angle_vector_list.append(angles)
                             bag_angle_vector_list.append(angles)
-                            # print(type(preb_joints_msg.position[0]))
-                            # print(preb_joints_msg.position[0])
                     else:
                         next_save_time = time + time_span
                     preb_time = time
@@ -138,11 +132,11 @@ class RosbagReader(object):
             with open(file_name, 'w') as f:
                 writer =csv.writer(f)
                 for angle_vector in bag_angle_vector_list:
-                    writer.writerow(angle_vector.numpy().tolist())
+                    writer.writerow(angle_vector.get_numpy().tolist())
             print("joint saved in {}".format(file_name))
             dump_file = bag_save_dir + "images.txt"
             f = open(dump_file,'wb')
-            bag_rgb_image_pil_list = [i.pil_image() for i in bag_rgb_image_list]
+            bag_rgb_image_pil_list = [PIL.Image.fromarray(i.get_numpy()) for i in bag_rgb_image_list]
             pickle.dump(bag_rgb_image_pil_list, f)
             f.close
             print("image also saved in {}".format(dump_file))
@@ -152,11 +146,11 @@ class RosbagReader(object):
         with open(file_name, 'w') as f:
             writer =csv.writer(f)
             for angle_vector in angle_vector_list:
-                writer.writerow(angle_vector.numpy().tolist())
+                writer.writerow(angle_vector.get_numpy().tolist())
         print("joint saved in {}".format(file_name))
         dump_file = self.data_dir + "images.txt"
         f = open(dump_file,'wb')
-        rgb_image_pil_list = [i.pil_image() for i in rgb_image_list]
+        rgb_image_pil_list = [PIL.Image.fromarray(i.get_numpy()) for i in rgb_image_list]
         pickle.dump(rgb_image_pil_list, f)
         f.close
         print("image also saved in {}".format(dump_file))
