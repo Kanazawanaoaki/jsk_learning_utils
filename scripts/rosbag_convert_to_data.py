@@ -30,13 +30,15 @@ class AngleVector:
             idx = msg.name.index(j_dict["name"])
             if j_dict["type"] == "revolute":
                 joint_angles.append(msg.position[idx])
-            if j_dict["type"] == "prismatic":
+            elif j_dict["type"] == "prismatic":
                 joint_angles.append(msg.position[idx])
-            if j_dict["type"] == "continuous":
+            elif j_dict["type"] == "continuous":
                 if j_dict["clamp"]:
                     joint_angles.append(cls.clamp_rad(msg.position[idx]))
                 else:
                     joint_angles.append(msg.position[idx])
+            else:
+                assert False, 'joint type {} is not expected'.format(j_dict["type"])
         np_joint_angles = np.array(joint_angles)
         return cls(np_joint_angles)
 
