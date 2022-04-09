@@ -1,12 +1,14 @@
 rosbag_convert_hz: 5
-control_joint_names: [
-    r_shoulder_pan_joint,
-    r_shoulder_lift_joint,
-    r_upper_arm_roll_joint,
-    r_elbow_flex_joint,
-    r_forearm_roll_joint,
-    r_wrist_flex_joint,
-    r_wrist_roll_joint]
+joint_states_topic: /joint_states
+image_topic: /kinect_head/rgb/image_rect_color/compressed
+control_joints: [
+    {name: r_shoulder_pan_joint, type: revolute},
+    {name: r_shoulder_lift_joint, type: revolute},
+    {name: r_upper_arm_roll_joint, type: revolute},
+    {name: r_elbow_flex_joint, type: revolute},
+    {name: r_forearm_roll_joint, type: continuous, clamp: True},
+    {name: r_wrist_flex_joint, type: revolute},
+    {name: r_wrist_roll_joint, type: continuous, clamp: True}]
 init_joint_names: [
     torso_lift_joint,
     r_shoulder_pan_joint,
