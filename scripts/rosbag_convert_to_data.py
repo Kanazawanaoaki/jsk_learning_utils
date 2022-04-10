@@ -20,6 +20,7 @@ import PIL.Image
 from jsk_learning_utils.config import Config 
 from jsk_learning_utils.config import construct_config
 from jsk_learning_utils.project_data import get_project_dir
+from jsk_learning_utils.project_data import get_rosbag_dir
 from jsk_learning_utils.project_data import get_dataset_dir
 from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
 from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
@@ -88,8 +89,11 @@ class RosbagReader(object):
         rgb_image_list: List[RGBImage] = []
 
         for file_name in os.listdir(self.bag_dir):
-            bag = rosbag.Bag(os.path.join(self.bag_dir, file_name))
+            _, ext =  os.path.splitext(file_name)
+            if ext != ".bag":
+                continue
 
+            bag = rosbag.Bag(os.path.join(self.bag_dir, file_name))
             bag_save_dir = get_kanazawa_specific_rosbag_dir(self.project_name, file_name)
 
             bag_rgb_image_list = []
@@ -147,11 +151,11 @@ class RosbagReader(object):
             for angle_vector in angle_vector_list:
                 writer.writerow(angle_vector.get_numpy().tolist())
         print("joint saved in {}".format(file_name))
-        dump_file = os.path.join(self.data_dir, "images.txt")
-        f = open(dump_file,'wb')
         rgb_image_pil_list = [PIL.Image.fromarray(i.get_numpy()) for i in rgb_image_list]
-        pickle.dump(rgb_image_pil_list, f)
-        f.close
+
+        dump_file = os.path.join(self.data_dir, "images.txt")
+        with open(dump_file, 'wb') as f:
+            pickle.dump(rgb_image_pil_list, f)
         print("image also saved in {}".format(dump_file))
 
 if __name__ == '__main__':
