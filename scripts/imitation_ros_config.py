@@ -23,7 +23,8 @@ from std_msgs.msg import Float64MultiArray
 import sensor_msgs.msg
 import cv2
 
-import config_reader
+from jsk_learning_utils.config import construct_config
+
 
 class DCAECompOne(object):
   def __init__(self, model_dir, z_dim):
@@ -200,7 +201,7 @@ if __name__ == '__main__':
     comp_model += '/'
 
   # load config
-  now_config = config_reader.construct_config(config_file)
+  now_config = construct_config(config_file)
 
   # ROSの設定
   rospy.init_node('pr2_imitation_play', anonymous=True)

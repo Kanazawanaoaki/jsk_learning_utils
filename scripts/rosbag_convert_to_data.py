@@ -17,7 +17,8 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import PIL.Image
 
-from config_reader import Config, construct_config
+from jsk_learning_utils.config import Config 
+from jsk_learning_utils.config import construct_config
 from jsk_learning_utils.project_data import get_project_dir
 from jsk_learning_utils.project_data import get_dataset_dir
 from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
