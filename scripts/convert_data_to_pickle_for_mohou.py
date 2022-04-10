@@ -10,7 +10,8 @@ from mohou.file import get_project_dir as mohou_get_project_dir
 import csv
 import numpy as np
 
-from project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_dataset_dir
+
 
 data_dir = get_dataset_dir('sample_rcup_pick')
 dump_name = mohou_get_project_dir('sample_rcup_pick')

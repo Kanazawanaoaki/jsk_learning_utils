@@ -18,7 +18,10 @@ import cv2
 import PIL.Image
 
 from config_reader import Config, construct_config
-from project_data import get_rosbag_dir, get_dataset_dir, get_kanazawa_specific_rosbag_dir
+from jsk_learning_utils.project_data import get_project_dir
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
+from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
 
 
 @dataclass
