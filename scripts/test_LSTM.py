@@ -81,7 +81,7 @@ class LSTMPred(object):
 
 def save_video(frames, path):
   clip = mpy.ImageSequenceClip(frames, fps=30)
-  clip.write_videofile(path, fps=30)
+  clip.write_gif(path, fps=30)
 
 def check_and_make_dir(data_path):
   if False == os.path.exists(data_path):
@@ -117,8 +117,8 @@ if __name__ == '__main__':
         preder = LSTMPred(lstm_model_dir, hidden_size, z_dim)
         movie_dir = os.path.join(get_project_dir(project_name), 'movies')
         check_and_make_dir(movie_dir)
-        movie_file = os.path.join(movie_dir, movie_file_prefix + ".mp4")
-        reconstruction_movie_file = os.path.join(movie_dir, movie_file_prefix + "_reconstruction.mp4")
+        movie_file = os.path.join(movie_dir, movie_file_prefix + ".gif")
+        reconstruction_movie_file = os.path.join(movie_dir, movie_file_prefix + "_reconstruction.gif")
       
         # 画像と関節角度を読み込む 最初の物を初期とする
         np_file = os.path.join(test_data_dir, "comp_image.txt")
