@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import os,sys
 import torch
 import torchvision
@@ -14,6 +15,10 @@ from network import LSTM
 from sklearn.model_selection import train_test_split
 import csv
 
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_project_dir
+
+
 class LSTMrosbag(object):
     def __init__(self, epoch, model_dir, data_dir, hidden_size, z_dim):
         self.epoch = epoch
@@ -23,7 +28,6 @@ class LSTMrosbag(object):
         self.z_dim = z_dim
         self.data_dims = self.z_dim + 7
         print("epoch : {} , hidden_size : {}, model_dir : {}, data_dir : {}".format(self.epoch,self.hidden_size,self.model_dir,self.data_dir))
-        self.check_and_make_dir()
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # self.device = 'cpu'
         print("device : {}".format(self.device))
@@ -41,11 +45,11 @@ class LSTMrosbag(object):
         joints_lists_list = []
         max_length = 0
         for dir_name in files_dir:
-            now_dir = self.data_dir + dir_name + "/"
-            np_file = now_dir + "comp_image.txt"
+            now_dir = os.path.join(self.data_dir, dir_name)
+            np_file = os.path.join(now_dir, "comp_image.txt")
             np_image = np.loadtxt(np_file)
             np_image_list.append(np_image)
-            joints_file = now_dir + "joints.csv"
+            joints_file = os.path.join(now_dir, "joints.csv")
             joints_lists = []
             with open(joints_file) as f:
                 reader = csv.reader(f)
@@ -92,14 +96,8 @@ class LSTMrosbag(object):
         print(self.test_x.size()[1])
         print("train data num : {}, test data num : {} ".format(len(self.train_x),len(self.test_x)))
         
-    def check_and_make_dir(self):
-        model_dir = self.model_dir
-        if False == os.path.exists(model_dir):
-            os.makedirs(model_dir)
-            print("make dir in path: {}".format(model_dir))
-        
     def save_model(self):
-        model_path = self.model_dir + "model.pt"
+        model_path = os.path.join(self.model_dir, "model.pt")
         torch.save(self.net.to('cpu').state_dict(), model_path)
         print("model saved in {}".format(model_path))
         
@@ -161,30 +159,36 @@ class LSTMrosbag(object):
         fig = plt.figure()
         plt.plot(t_accuracies, label="train")
         plt.plot(v_accuracies, label="valid")
-        log_path = self.model_dir + "log.png"
+        log_path = os.path.join(self.model_dir, "log.png")
         fig.legend()
         fig.savefig(log_path)
         print("log image saved in {}".format(log_path))
         loss_fig = plt.figure()
         plt.yscale("log")
         plt.plot(t_losses, label="train")
-        loss_log_path = self.model_dir + "loss_log.png"
+        loss_log_path = os.path.join(self.model_dir, "loss_log.png")
         loss_fig.legend()
         loss_fig.savefig(loss_log_path)
         print("loss log image saved in {}".format(loss_log_path))
-        plt.show()
         plt.clf()
 
 if __name__ == '__main__':
-    epoch = int(sys.argv[sys.argv.index("-e") + 1]) if "-e" in sys.argv else 5000
-    z_dim = int(sys.argv[sys.argv.index("-z") + 1]) if "-z" in sys.argv else 50
-    hidden_size = int(sys.argv[sys.argv.index("-h") + 1]) if "-h" in sys.argv else 50
-    data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else "data/from_rosbag/"
-    if data_dir[-1:] != '/':
-        data_dir += '/'
-    model_dir = sys.argv[sys.argv.index("-m") + 1] if "-m" in sys.argv else "../models/rosbag_LSTM_series_batch/"
-    if model_dir[-1:] != '/':
-        model_dir += '/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, help='project name')
+    parser.add_argument('-e', type=int, default=100,  help='epoch num')
+    parser.add_argument('-z', type=int, default=50, help='latent dim')
+    parser.add_argument('-hidden', type=int, default=50, help='hidden size')
+
+    args = parser.parse_args()
+    z_dim = args.z
+    hidden_size = args.hidden
+    epoch = args.e
+    project_name = args.project
+    data_dir = get_dataset_dir(project_name)
+    model_dir = os.path.join(get_project_dir(project_name), 'lstm_h{}'.format(hidden_size))
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+
     trainer = LSTMrosbag(epoch, model_dir, data_dir, hidden_size, z_dim)
     trainer.train()
     trainer.save_model()

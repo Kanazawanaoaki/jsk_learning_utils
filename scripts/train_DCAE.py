@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import os,sys
 import torch
 import torchvision
@@ -15,6 +16,9 @@ import glob
 from sklearn.model_selection import train_test_split
 import pickle
 
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_project_dir
+
 class DCAErosbag(object):
     def __init__(self, epoch, model_dir, data_dir, z_dim):
         self.epoch = epoch
@@ -22,7 +26,6 @@ class DCAErosbag(object):
         self.data_dir = data_dir
         self.z_dim = z_dim
         print("epoch:{}, model_dir:{}, z_dim:{}".format(self.epoch, self.model_dir ,self.z_dim))
-        self.check_and_make_dir()
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         print("device:{}".format(self.device))
         self.net = DCAE(channel=3, height=224, width=224, z_dim=z_dim).to(self.device)
@@ -36,7 +39,8 @@ class DCAErosbag(object):
         print("load data from {}".format(self.data_dir))
 
         # load data from binary pickle file
-        dump_file = self.data_dir + "images.txt"
+        dump_file = os.path.join(self.data_dir, "images.txt")
+        print(dump_file)
         f = open(dump_file,'rb')
         frames = pickle.load(f)
         f.close
@@ -72,14 +76,8 @@ class DCAErosbag(object):
         #                                               batch_size=100,
         #                                               shuffle=False)
 
-    def check_and_make_dir(self):
-        model_dir = self.model_dir
-        if False == os.path.exists(model_dir):
-            os.makedirs(model_dir)
-            print("make dir in path: {}".format(model_dir))
-        
     def save_model(self):
-        model_path = self.model_dir + "model.pt"
+        model_path = os.path.join(self.model_dir, "model.pt")
         torch.save(self.net.to('cpu').state_dict(), model_path)
         print("model saved in {}".format(model_path))
         
@@ -125,22 +123,27 @@ class DCAErosbag(object):
         fig = plt.figure()
         plt.plot(t_losses, label="train")
         plt.plot(v_losses, label="valid")
-        log_path = self.model_dir + "log.png"
+        log_path = os.path.join(self.model_dir, "log.png")
         plt.legend()
         fig.savefig(log_path)
         print("log image saved in {}".format(log_path))
-        plt.show()
         plt.clf()
 
 if __name__ == '__main__':
-    epoch = int(sys.argv[sys.argv.index("-e") + 1]) if "-e" in sys.argv else 100
-    z_dim = int(sys.argv[sys.argv.index("-z") + 1]) if "-z" in sys.argv else 50
-    data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else "data/from_rosbag/"
-    if data_dir[-1:] != '/':
-        data_dir += '/'
-    model_dir = sys.argv[sys.argv.index("-m") + 1] if "-m" in sys.argv else "../models/rosbag_DCAE/"
-    if model_dir[-1:] != '/':
-        model_dir += '/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, help='project name')
+    parser.add_argument('-e', type=int, default=100,  help='epoch num')
+    parser.add_argument('-z', type=int, default=50, help='latent dim')
+
+    args = parser.parse_args()
+    z_dim = args.z
+    epoch = args.e
+    project_name = args.project
+    data_dir = get_dataset_dir(project_name)
+    model_dir = os.path.join(get_project_dir(project_name), 'dcae_z{}'.format(z_dim))
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+
     trainer = DCAErosbag(epoch, model_dir, data_dir, z_dim)
     trainer.train()
     trainer.save_model()

@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import os,sys
 import torch
 import torchvision
@@ -12,6 +13,10 @@ from network import DCAE
 from PIL import Image
 import glob
 import pickle
+
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_project_dir
+
 
 class DCAETester(object):
     def __init__(self, model_dir, data_dir, z_dim):
@@ -26,7 +31,7 @@ class DCAETester(object):
 
         print("load data from {}".format(self.data_dir))
 
-        dump_file = self.data_dir + "images.txt"
+        dump_file = os.path.join(self.data_dir, "images.txt")
         f = open(dump_file,'rb')
         frames = pickle.load(f)
         f.close
@@ -49,7 +54,7 @@ class DCAETester(object):
         self.load_model()        
 
     def load_model(self):
-        model_path = self.model_dir + "model.pt"
+        model_path = os.path.join(self.model_dir, "model.pt")
         self.net.load_state_dict(torch.load(model_path))
         print("load model in {}".format(model_path))
 
@@ -76,22 +81,24 @@ class DCAETester(object):
             ax = fig2.add_subplot(10, 10, i+1, xticks=[], yticks=[])
             ax.imshow(im, 'gray')
         fig2.tight_layout(rect=[0,0,1,0.96])
-        log1_path = self.model_dir + "image_original.png"
+        log1_path = os.path.join(self.model_dir, "image_original.png")
         fig1.savefig(log1_path)
         print("original image saved in {}".format(log1_path))
-        log2_path = self.model_dir + "image_reconstruction.png"
+        log2_path = os.path.join(self.model_dir, "image_reconstruction.png")
         fig2.savefig(log2_path)
         print("reconstruction image saved in {}".format(log2_path))
-        plt.show()
         plt.clf()
         
 if __name__ == '__main__':
-    z_dim = int(sys.argv[sys.argv.index("-z") + 1]) if "-z" in sys.argv else 50
-    data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else "data/from_rosbag/"
-    if data_dir[-1:] != '/':
-        data_dir += '/'
-    model_dir = sys.argv[sys.argv.index("-m") + 1] if "-m" in sys.argv else "../models/rosbag_DCAE/"
-    if model_dir[-1:] != '/':
-        model_dir += '/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, help='project name')
+    parser.add_argument('-z', type=int, default=50, help='latent dim')
+
+    args = parser.parse_args()
+    z_dim = args.z
+    project_name = args.project
+
+    data_dir = get_dataset_dir(project_name)
+    model_dir = os.path.join(get_project_dir(project_name), 'dcae_z{}'.format(z_dim))
     tester = DCAETester(model_dir, data_dir, z_dim)
     tester.view_result()
