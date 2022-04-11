@@ -25,7 +25,7 @@ function(setup_python_submodule relative_submodules_dir)
 
   if(NOT EXISTS "${CATKIN_DEVEL_PREFIX}/${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
     file(MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
-    file(TOUCH "${CATKIN_DEVEL_PREFIX}/${PYTHON_INSTALL_DIR}/${PROJECT_NAME}/__init__.py")
+    execute_process(COMMAND touch "${CATKIN_DEVEL_PREFIX}/${PYTHON_INSTALL_DIR}/${PROJECT_NAME}/__init__.py")
   endif()
 
   if(EXISTS ${${PROJECT_NAME}_SOURCE_DIR}/${relative_submodules_dir}/__init__.py)
