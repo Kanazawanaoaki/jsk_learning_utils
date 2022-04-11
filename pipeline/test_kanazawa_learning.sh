@@ -26,9 +26,9 @@ if [[ ! -e $bag_zip ]]; then
     unzip $bag_zip -d $bagdir
 fi
 
-rosrun jsk_learning_utils scripts/rosbag_convert_to_data.py
-rosrun jsk_learning_utils train_DCAE.py -z $zdim -e $c_epoch -project sample_rcup_pick
-rosrun jsk_learning_utils test_DCAE.py -z $zdim -project sample_rcup_pick
-rosrun jsk_learning_utils comp_by_DCAE.py -z $zdim -project sample_rcup_pick
-rosrun jsk_learning_utils train_LSTM.py -z $zdim -hidden $hidden -e $p_epoch -project sample_rcup_pick
-rosrun jsk_learning_utils test_LSTM.py -z $zdim -l 0 -hidden $hidden -project sample_rcup_pick
+rosrun jsk_learning_utils rosbag_convert_to_data.py -project $project_name
+rosrun jsk_learning_utils train_DCAE.py -z $zdim -e $c_epoch -project $project_name
+rosrun jsk_learning_utils test_DCAE.py -z $zdim -project $project_name
+rosrun jsk_learning_utils comp_by_DCAE.py -z $zdim -project $project_name
+rosrun jsk_learning_utils train_LSTM.py -z $zdim -hidden $hidden -e $p_epoch -project $project_name
+rosrun jsk_learning_utils test_LSTM.py -z $zdim -l 0 -hidden $hidden -project $project_name

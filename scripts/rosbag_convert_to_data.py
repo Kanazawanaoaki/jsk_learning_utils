@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, glob, sys
+import argparse
+import os
 import rosbag
 import matplotlib.pyplot as plt
 import math
@@ -12,12 +13,13 @@ from dataclasses import dataclass
 from sensor_msgs.msg import JointState, CompressedImage, Image
 from typing import List, Union
 import rospkg
+import shutil
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import PIL.Image
 
-from jsk_learning_utils.config import Config 
+from jsk_learning_utils.config import Config
 from jsk_learning_utils.config import construct_config
 from jsk_learning_utils.project_data import get_project_dir
 from jsk_learning_utils.project_data import get_rosbag_dir
@@ -159,12 +161,24 @@ class RosbagReader(object):
         print("image also saved in {}".format(dump_file))
 
 if __name__ == '__main__':
-    project_name = 'sample_rcup_pick'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, default='sample_rcup_pick', help='project name')
+    parser.add_argument('-config', type=str, help='config file name')
+
+    args = parser.parse_args()
+    project_name = args.project
+    print(args.config)
+    if args.config:
+        config_name = args.config
+    else:
+        config_name = "config.yaml"
     pkg_path = rospkg.RosPack().get_path('jsk_learning_utils')
-    config_file = os.path.join(pkg_path, 'configs', 'rarm_pr2.yaml')
+    config_file = os.path.join(pkg_path, 'configs', config_name)
+    copied_config_file = os.path.join(get_project_dir(project_name), "config.yaml")
+
     bag_dir = get_rosbag_dir(project_name)
     data_dir = get_dataset_dir(project_name)
-
+    shutil.copy(config_file, copied_config_file)
     now_config = construct_config(config_file)
     print("config!  hz:{}, image_x_min:{}, image_resolution:{}".format(now_config.rosbag_convert_hz, now_config.image_config.x_min, now_config.image_config.resolution))
     reader=RosbagReader(bag_dir, data_dir, now_config, project_name)
