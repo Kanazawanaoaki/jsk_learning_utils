@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, glob, sys
+import argparse
+import os
 import rosbag
 import matplotlib.pyplot as plt
 import math
@@ -11,12 +12,20 @@ import numpy as np
 from dataclasses import dataclass
 from sensor_msgs.msg import JointState, CompressedImage, Image
 from typing import List, Union
+import rospkg
+import shutil
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import PIL.Image
 
-from config_reader import Config, construct_config
+from jsk_learning_utils.config import Config
+from jsk_learning_utils.config import construct_config
+from jsk_learning_utils.project_data import get_project_dir
+from jsk_learning_utils.project_data import get_rosbag_dir
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
+from jsk_learning_utils.project_data import get_kanazawa_specific_rosbag_dir
 
 
 @dataclass
@@ -69,30 +78,26 @@ class RGBImage:
         return self.data
 
 class RosbagReader(object):
-    def __init__(self, bag_dir, data_dir, config):
+    def __init__(self, bag_dir, data_dir, config, project_name):
+        self.project_name = project_name
         self.bag_dir = bag_dir
         self.data_dir = data_dir
         self.hz = config.rosbag_convert_hz
         self.config = config
         print("hz : {}, bag_dir : {}, data_dir : {}".format(self.hz, self.bag_dir, self.data_dir))
 
-    def check_and_make_dir(self,dir_path):
-        if False == os.path.exists(dir_path):
-            os.makedirs(dir_path)
-            print("make dir in path: {}".format(dir_path))
-
     def load_rosbag(self):
-        self.check_and_make_dir(self.data_dir)
-        bag_files = glob.glob(os.path.dirname(os.path.abspath(__file__)) + '/' + self.bag_dir +'*.bag')
-        print(bag_files)
-
         angle_vector_list: List[AngleVector] = []
         rgb_image_list: List[RGBImage] = []
-        for file_name in bag_files:
-            bag = rosbag.Bag(file_name)
 
-            bag_save_dir = self.data_dir+str(file_name[file_name.rfind('/')+1:])+"/"
-            self.check_and_make_dir(bag_save_dir)
+        for file_name in os.listdir(self.bag_dir):
+            _, ext =  os.path.splitext(file_name)
+            if ext != ".bag":
+                continue
+
+            bag = rosbag.Bag(os.path.join(self.bag_dir, file_name))
+            bag_save_dir = get_kanazawa_specific_rosbag_dir(self.project_name, file_name)
+
             bag_rgb_image_list = []
             bag_angle_vector_list = []
 
@@ -114,7 +119,7 @@ class RosbagReader(object):
                             rgb_image = RGBImage.from_ros_msg(msg, self.config)
                             rgb_image_list.append(rgb_image)
                             bag_rgb_image_list.append(rgb_image)
-                            img_file_name = bag_save_dir + str(preb_time) + ".png"
+                            img_file_name = os.path.join(bag_save_dir, str(preb_time) + ".png")
                             PIL.Image.fromarray(rgb_image.get_numpy()).save(img_file_name)
 
                             # jointの情報を保存
@@ -128,13 +133,13 @@ class RosbagReader(object):
                 if topic == self.config.joint_states_topic:
                     preb_joints_msg = msg
             print("joint topics : {}, image topics : {}".format(len(bag_angle_vector_list), len(bag_rgb_image_list)))
-            file_name = bag_save_dir + "joints.csv"
+            file_name = os.path.join(bag_save_dir, "joints.csv")
             with open(file_name, 'w') as f:
                 writer =csv.writer(f)
                 for angle_vector in bag_angle_vector_list:
                     writer.writerow(angle_vector.get_numpy().tolist())
             print("joint saved in {}".format(file_name))
-            dump_file = bag_save_dir + "images.txt"
+            dump_file = os.path.join(bag_save_dir, "images.txt")
             f = open(dump_file,'wb')
             bag_rgb_image_pil_list = [PIL.Image.fromarray(i.get_numpy()) for i in bag_rgb_image_list]
             pickle.dump(bag_rgb_image_pil_list, f)
@@ -142,29 +147,39 @@ class RosbagReader(object):
             print("image also saved in {}".format(dump_file))
 
         # data saves
-        file_name = self.data_dir + "joints.csv"
+        file_name = os.path.join(self.data_dir, "joints.csv")
         with open(file_name, 'w') as f:
             writer =csv.writer(f)
             for angle_vector in angle_vector_list:
                 writer.writerow(angle_vector.get_numpy().tolist())
         print("joint saved in {}".format(file_name))
-        dump_file = self.data_dir + "images.txt"
-        f = open(dump_file,'wb')
         rgb_image_pil_list = [PIL.Image.fromarray(i.get_numpy()) for i in rgb_image_list]
-        pickle.dump(rgb_image_pil_list, f)
-        f.close
+
+        dump_file = os.path.join(self.data_dir, "images.txt")
+        with open(dump_file, 'wb') as f:
+            pickle.dump(rgb_image_pil_list, f)
         print("image also saved in {}".format(dump_file))
 
 if __name__ == '__main__':
-    config_file = sys.argv[sys.argv.index("-c") + 1] if "-c" in sys.argv else "../configs/rarm_pr2.yaml"
-    bag_dir = sys.argv[sys.argv.index("-b") + 1] if "-b" in sys.argv else '../bags/'
-    if bag_dir[-1:] != '/':
-        bag_dir += '/'
-    data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else 'data/from_rosbag/'
-    if data_dir[-1:] != '/':
-        data_dir += '/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, default='sample_rcup_pick', help='project name')
+    parser.add_argument('-config', type=str, help='config file name')
 
+    args = parser.parse_args()
+    project_name = args.project
+    print(args.config)
+    if args.config:
+        config_name = args.config
+    else:
+        config_name = "config.yaml"
+    pkg_path = rospkg.RosPack().get_path('jsk_learning_utils')
+    config_file = os.path.join(pkg_path, 'configs', config_name)
+    copied_config_file = os.path.join(get_project_dir(project_name), "config.yaml")
+
+    bag_dir = get_rosbag_dir(project_name)
+    data_dir = get_dataset_dir(project_name)
+    shutil.copy(config_file, copied_config_file)
     now_config = construct_config(config_file)
     print("config!  hz:{}, image_x_min:{}, image_resolution:{}".format(now_config.rosbag_convert_hz, now_config.image_config.x_min, now_config.image_config.resolution))
-    reader=RosbagReader(bag_dir,data_dir, now_config)
+    reader=RosbagReader(bag_dir, data_dir, now_config, project_name)
     reader.load_rosbag()

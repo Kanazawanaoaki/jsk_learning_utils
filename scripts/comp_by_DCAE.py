@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import os,sys
 import torch
 import torchvision
@@ -13,6 +14,9 @@ from PIL import Image
 import glob
 import csv
 import pickle
+
+from jsk_learning_utils.project_data import get_dataset_dir
+from jsk_learning_utils.project_data import get_project_dir
 
 class DCAECompresser(object):
     def __init__(self, model_dir, data_dir, z_dim):
@@ -27,7 +31,7 @@ class DCAECompresser(object):
 
         print("load data from {}".format(self.data_dir))
         
-        dump_file = self.data_dir + "images.txt"
+        dump_file = os.path.join(self.data_dir, "images.txt")
         f = open(dump_file,'rb')
         frames = pickle.load(f)
         f.close
@@ -50,7 +54,7 @@ class DCAECompresser(object):
         self.load_model()
 
     def load_model(self):
-        model_path = self.model_dir + "model.pt"
+        model_path = os.path.join(self.model_dir, "model.pt")
         self.net.load_state_dict(torch.load(model_path))
         print("load model in {}".format(model_path))
 
@@ -60,8 +64,8 @@ class DCAECompresser(object):
         files_dir = [f for f in files if os.path.isdir(os.path.join(self.data_dir, f))]
         print(files_dir)    # ['dir1', 'dir2']
         for dir_name in files_dir:
-            now_dir = self.data_dir + dir_name + "/"
-            dump_file = now_dir + "images.txt"
+            now_dir = os.path.join(self.data_dir, dir_name)
+            dump_file = os.path.join(now_dir, "images.txt")
             f = open(dump_file,'rb')
             frames = pickle.load(f)
             f.close
@@ -91,18 +95,21 @@ class DCAECompresser(object):
         #         print(z)
         #         writer.writerow(z)
         # print("compressed image saved in {}".format(file_name))
-        np_file = save_dir + "comp_image.txt"
+        np_file = os.path.join(save_dir, "comp_image.txt")
         np.savetxt(np_file, z_numpy)
         print("compressed image saved in {}".format(np_file))
         
 if __name__ == '__main__':
-    z_dim = int(sys.argv[sys.argv.index("-z") + 1]) if "-z" in sys.argv else 50
-    data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else "data/from_rosbag/"
-    if data_dir[-1:] != '/':
-        data_dir += '/'
-    model_dir = sys.argv[sys.argv.index("-m") + 1] if "-m" in sys.argv else "../models/rosbag_DCAE/"
-    if model_dir[-1:] != '/':
-        model_dir += '/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-project', type=str, help='project name')
+    parser.add_argument('-z', type=int, default=50, help='latent dim')
+    args = parser.parse_args()
+    z_dim = args.z
+    project_name = args.project
+
+    data_dir = get_dataset_dir(project_name)
+    model_dir = os.path.join(get_project_dir(project_name), 'dcae_z{}'.format(z_dim))
+
     compresser = DCAECompresser(model_dir, data_dir, z_dim)
     compresser.compress()
     

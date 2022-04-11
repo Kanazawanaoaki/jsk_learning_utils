@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os,sys
 import pickle
@@ -7,20 +6,18 @@ import cv2
 from moviepy.editor import ImageSequenceClip
 from mohou.types import RGBImage, DepthImage, AngleVector
 from mohou.types import ElementSequence, EpisodeData, MultiEpisodeChunk
+from mohou.file import get_project_dir as mohou_get_project_dir
 import csv
 import numpy as np
 
+from jsk_learning_utils.project_data import get_dataset_dir
 
-data_dir = sys.argv[sys.argv.index("-d") + 1] if "-d" in sys.argv else 'data/rcup_20220218_pick/'
-if data_dir[-1:] != '/':
-    data_dir += '/'
-dump_name = sys.argv[sys.argv.index("-n") + 1] if "-n" in sys.argv else 'rcup_20220218_pick'
-if dump_name[-1:] != '/':
-    dump_name += '/'
+
+data_dir = get_dataset_dir('sample_rcup_pick')
+dump_name = mohou_get_project_dir('sample_rcup_pick')
 
 files = os.listdir(data_dir)
 files_dir = [f for f in files if os.path.isdir(os.path.join(data_dir, f))]
-print(files_dir)    # ['dir1', 'dir2']
 np_image_list = []
 joints_lists_list = []
 max_length = 0
