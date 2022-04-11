@@ -1,0 +1,54 @@
+rosbag_convert_hz: 5
+joint_states_topic: /joint_states
+image_topic: /kinect_head/rgb/image_rect_color/compressed
+control_joints: [
+    {name: l_shoulder_pan_joint, type: revolute},
+    {name: l_shoulder_lift_joint, type: revolute},
+    {name: l_upper_arm_roll_joint, type: revolute},
+    {name: l_elbow_flex_joint, type: revolute},
+    {name: l_forearm_roll_joint, type: continuous, clamp: True},
+    {name: l_wrist_flex_joint, type: revolute},
+    {name: l_wrist_roll_joint, type: continuous, clamp: True},
+    {name: l_gripper_joint, type: prismatic}]
+init_joint_names: [
+    torso_lift_joint,
+    r_shoulder_pan_joint,
+    r_shoulder_lift_joint,
+    r_upper_arm_roll_joint,
+    r_elbow_flex_joint,
+    r_forearm_roll_joint,
+    r_wrist_flex_joint,
+    r_wrist_roll_joint,
+    l_shoulder_pan_joint,
+    l_shoulder_lift_joint,
+    l_upper_arm_roll_joint,
+    l_elbow_flex_joint,
+    l_forearm_roll_joint,
+    l_wrist_flex_joint,
+    l_wrist_roll_joint,
+    head_tilt_joint,
+]
+init_joint_angles: [
+    0.3,
+    -1.3089969389957472,
+    0.2726646259971648,
+    -1.9198621771937625,
+    -1.9198621771937625,
+    0.3490658503988659,
+    -0.17453292519943295,
+    -0.17453292519943295,
+    1.8089969389957472,
+    0.2726646259971648,
+    1.9198621771937625,
+    -1.9198621771937625,
+    -0.3490658503988659,
+    -0.17453292519943295,
+    -0.17453292519943295,
+    1.2
+]
+image_config:
+    x_min: 40
+    x_max: 370
+    y_min: 160
+    y_max: 500
+    resolution: 224
