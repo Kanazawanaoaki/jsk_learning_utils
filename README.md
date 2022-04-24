@@ -58,16 +58,27 @@ bash exec_learning.bash
 ### 学習した動作の実行
 現在のカメラ画像と関節情報を取得して模倣学習の予測結果を出力するpythonプログラムを立ち上げる.
 ```
-python3 imitation_ros_config.py -c ../configs/rarm_pr2.yaml -z 10 -l 50 -h 256 -m ../models/rcup_20220218_pick_DCAE_z10_e100 -p ../models/rcup_20220218_pick_DCAE_z10_e100_LSTM_noise_series_batch_e20000_h256
+python3 imitation_ros_config.py -c ../configs/config.yaml -z 10 -l 50 -h 256 -m ../project_data/sample_rcup_pick/dcae_z10/ -p ../project_data/sample_rcup_pick/lstm_h256/
 ```
 PR2に動作を送るeusプログラムを立ち上げる
 ```
 roscd jsk_learning_utils/euslisp/pr2
 roseus pr2_imitation_exec.l
-(initial-pose-tmp)
+(initial-pose-rcup)
 ```
 模倣を実行する．
 ```
+(start-imitation)
+```
+
+cap hook の例
+```
+python3 imitation_ros_config_cap.py -c ../configs/larm_gripper_pr2.yaml -z 10 -l 50 -h 256 -m ../project_data/cap_hook_20220331/dcae_z10/ -p ../project_data/cap_hook_20220331/lstm_h256/
+```
+```
+roscd jsk_learning_utils/euslisp/pr2
+roseus pr2_imitation_exec.l
+(initial-pose-tmp)
 (start-imitation)
 ```
 
