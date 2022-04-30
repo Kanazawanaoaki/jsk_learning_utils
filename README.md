@@ -79,7 +79,7 @@ python3 imitation_ros_config_cap.py -c ../configs/larm_gripper_pr2.yaml -z 10 -l
 roscd jsk_learning_utils/euslisp/pr2
 roseus pr2_imitation_exec.l
 (initial-pose-tmp)
-(start-imitation)
+(start-imitation-cap)
 ```
 
 ## WIP 石田さんの模倣学習への対応
