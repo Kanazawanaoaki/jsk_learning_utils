@@ -1,6 +1,7 @@
 #/bin/bash
 
 project_name="sample_rcup_pick"
+config_name="config.yaml"
 zdim=10
 testing=false
 if $testing
@@ -26,7 +27,7 @@ if [[ ! -e $bag_zip ]]; then
     unzip $bag_zip -d $bagdir
 fi
 
-rosrun jsk_learning_utils rosbag_convert_to_data.py -project $project_name
+rosrun jsk_learning_utils rosbag_convert_to_data.py -project $project_name -config $config_name
 rosrun jsk_learning_utils train_DCAE.py -z $zdim -e $c_epoch -project $project_name
 rosrun jsk_learning_utils test_DCAE.py -z $zdim -project $project_name
 rosrun jsk_learning_utils comp_by_DCAE.py -z $zdim -project $project_name
