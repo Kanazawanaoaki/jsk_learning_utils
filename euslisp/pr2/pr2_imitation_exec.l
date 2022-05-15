@@ -59,6 +59,14 @@
   (send *ri* :stop-grasp)
   )
 
+(defun initial-pose-blue-box ()
+  (setq *initial-av* '#f(299.831 74.9721 49.9994 109.993 -110.003 -20.0038 -10.0054 -9.99972 -33.8218 2.75405 -59.0934 -106.486 270.317 -114.592 -201.405 0.000701 61.356))
+  (send *pr2* :angle-vector *initial-av*)
+  (send *ri* :angle-vector (send *pr2* :angle-vector))
+  (send *ri* :wait-interpolation)
+  (send *ri* :stop-grasp)
+  )
+
 ;; initial-pose-tmp -> move with imitation
 (defun imitation-cmd-cb (msg)
   (setq *msg* msg)
@@ -79,6 +87,9 @@
    (setq now-rarm-cmd (map float-vector #'(lambda (x) (rad2deg x)) *now-cmd*))
    (format t "now rarm cmd ~A ~%" now-rarm-cmd)
    (send *pr2* :rarm :angle-vector now-rarm-cmd)
+   ;; (send *pr2* :r_forearm_roll_joint :joint-angle (+ (send *pr2* :r_forearm_roll_joint :joint-angle) 90))
+   ;; (send *pr2* :r_wrist_roll_joint :joint-angle (+ (send *pr2* :r_wrist_roll_joint :joint-angle) 90))
+
    ;; (send *ri* :angle-vector (send *pr2* :angle-vector))
    (send *ri* :angle-vector-sequence (list (send *pr2* :angle-vector)) (list 400)) ;;400
 
