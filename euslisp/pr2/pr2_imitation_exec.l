@@ -130,3 +130,34 @@
    (ros::sleep)
    )
   )
+
+(defun start-imitation-duka ()
+  ;; (send *ri* :speak-jp "学習した動作を実行します")
+  (ros::subscribe "/imitation/command" std_msgs::Float64MultiArray #'imitation-cmd-cb)
+  ;; (setq *now-cmd* (send *pr2* :rarm :angle-vector))
+  (setq *now-cmd* nil)
+  (ros::rate 5);;10
+  (do-until-key
+      (when *now-cmd*
+        ;; subscribeして動作する．
+        (send *pr2* :head-neck-y :joint-angle 0.0)
+        (send *pr2* :head-neck-p :joint-angle 60.0)
+        (setq now-rarm-cmd (map float-vector #'(lambda (x) (rad2deg x)) (subseq *now-cmd* 0 7)))
+        (setq now-r-gripper-cmd (elt *now-cmd* 7))
+        (format t "now rarm cmd ~A ~%" now-rarm-cmd)
+        (send *pr2* :rarm :angle-vector now-rarm-cmd)
+        ;; (send *ri* :angle-vector (send *pr2* :angle-vector))
+        (send *ri* :angle-vector-sequence (list (send *pr2* :angle-vector)) (list 400)) ;;400
+        (format t "now r-gripper cmd ~A ~%" now-r-gripper-cmd)
+        (if (>= now-r-gripper-cmd 1)
+            (send *ri* :start-grasp :rarm)
+            (send *ri* :stop-grasp :rarm)
+            )
+
+        ;; (send *ri* :wait-interpolation nil 0.01)
+        (send *viewer* :draw-objects)
+        )
+    (ros::spin-once)
+    (ros::sleep)
+    )
+  )

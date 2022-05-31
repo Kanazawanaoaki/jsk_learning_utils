@@ -40,7 +40,16 @@ class AngleVector:
             if j_dict["type"] == "revolute":
                 joint_angles.append(msg.position[idx])
             elif j_dict["type"] == "prismatic":
-                joint_angles.append(msg.position[idx])
+                # joint_angles.append(msg.position[idx])
+                g_threshold = 0.08
+                num = 0
+                if msg.position[idx] >= g_threshold:
+                    joint_angles.append(0)
+                    num = 0
+                    # print("hoge")
+                else:
+                    joint_angles.append(1)
+                    num = 1
             elif j_dict["type"] == "continuous":
                 if j_dict["clamp"]:
                     joint_angles.append(cls.clamp_rad(msg.position[idx]))
