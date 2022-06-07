@@ -1,0 +1,6 @@
+<launch>
+
+  <node pkg="rviz" name="pr2_rviz" type="rviz"
+        args="-d $(find jsk_learning_utils)/rviz/image_viewer.rviz" />
+
+</launch>
