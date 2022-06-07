@@ -1,7 +1,7 @@
 #/bin/bash
 
-project_name="sample_rcup_pick"
-config_name="config.yaml"
+project_name="cap_hook_20220331"
+config_name="larm_gripper_pr2.yaml"
 zdim=10
 testing=false
 if $testing
@@ -16,14 +16,15 @@ hidden=256
 
 project_dir=$(rospack find jsk_learning_utils)/project_data/$project_name
 bagdir="$project_dir/bags"
-bag_zip="$bagdir/bag.zip" # temporary located in HiroIshida's google drive
+bag_zip="$bagdir/bag.zip"
 
 if [[ ! -e $bagdir ]]; then
     mkdir -p $bagdir
 fi
 
+# temporary bag_zip file located in Kanazawanaoaki's google drive
 if [[ ! -e $bag_zip ]]; then
-    gdown https://drive.google.com/uc?id=1pd24iFEXf8PYkpPvu9OJg4ieV8cpj9rn -O $bag_zip
+    gdown https://drive.google.com/uc?id=1t5aN4ZZztOkUMHY3LWWwPU-5LF_ZBipR -O $bag_zip
     unzip $bag_zip -d $bagdir
 fi
 

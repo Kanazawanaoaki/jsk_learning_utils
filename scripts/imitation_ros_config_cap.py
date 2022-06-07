@@ -61,7 +61,7 @@ class LSTMPred(object):
   def __init__(self, model_dir, hidden_size, z_dim):
     self.model_dir = model_dir
     self.z_dim = z_dim
-    self.data_dims = self.z_dim + 7
+    self.data_dims = self.z_dim + 8
     print("model_dir : {}, data_dim : {}".format(self.model_dir, self.data_dims))
     self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print("device : {}".format(self.device))
@@ -179,9 +179,9 @@ class PR2Imitation(object):
         # without data len limit
         output = self.preder.pred_one(input_data)
 
-      print("output command : {}".format(output[0][-1][-7:]))
-      cmd_lists = output[0][-1][-7:].tolist()
-      img_lists = output[0][-1][:-7]
+      print("output command : {}".format(output[0][-1][-8:]))
+      cmd_lists = output[0][-1][-8:].tolist()
+      img_lists = output[0][-1][:-8]
 
       # publish command and image
       cmd_msg = Float64MultiArray()

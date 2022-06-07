@@ -54,10 +54,11 @@ class DCAECompOne(object):
     return x.cpu().detach().numpy()
 
 class LSTMPred(object):
-  def __init__(self, model_dir, hidden_size, z_dim):
+  def __init__(self, model_dir, hidden_size, z_dim, joint_dim):
     self.model_dir = model_dir
     self.z_dim = z_dim
-    self.data_dims = self.z_dim + 7
+    self.joint_dim = joint_dim
+    self.data_dims = self.z_dim + self.joint_dim
     print("model_dir : {}, data_dim : {}".format(self.model_dir, self.data_dims))
     self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print("device : {}".format(self.device))
@@ -112,14 +113,7 @@ if __name__ == '__main__':
         test_data_dir = os.path.join(base_dir, test_data_dir_tmp)
         if not os.path.isdir(test_data_dir):
             continue
-        movie_file_prefix, _ = os.path.splitext(test_data_dir_tmp)
-        compresser = DCAECompOne(dcae_model_dir, z_dim)
-        preder = LSTMPred(lstm_model_dir, hidden_size, z_dim)
-        movie_dir = os.path.join(get_project_dir(project_name), 'movies')
-        check_and_make_dir(movie_dir)
-        movie_file = os.path.join(movie_dir, movie_file_prefix + ".gif")
-        reconstruction_movie_file = os.path.join(movie_dir, movie_file_prefix + "_reconstruction.gif")
-      
+
         # 画像と関節角度を読み込む 最初の物を初期とする
         np_file = os.path.join(test_data_dir, "comp_image.txt")
         np_image = np.loadtxt(np_file)
@@ -130,23 +124,28 @@ if __name__ == '__main__':
           for row in reader:
             row = [float (v) for v in row]
             joints_lists.append(row)
-        # print(type(img_lists))
-        # rgbImg = compresser.dec_one(np.expand_dims(img_lists, axis = 0))[0].transpose(1,2,0)
-        # img = Image.fromarray(img_lists)
-        # img = frames[0].resize((224,224))
-        # plt.imshow(img); plt.show()
+        joint_dim = len(joints_lists[0])
+
         input_data = []
         frames = []
         reconstruction_frames = []
+
+        movie_file_prefix, _ = os.path.splitext(test_data_dir_tmp)
+        compresser = DCAECompOne(dcae_model_dir, z_dim)
+        preder = LSTMPred(lstm_model_dir, hidden_size, z_dim, joint_dim)
+        movie_dir = os.path.join(get_project_dir(project_name), 'movies')
+        check_and_make_dir(movie_dir)
+        movie_file = os.path.join(movie_dir, movie_file_prefix + ".gif")
+        reconstruction_movie_file = os.path.join(movie_dir, movie_file_prefix + "_reconstruction.gif")
         for i in range(len(np_image)):
           img_lists = np_image[i]
           cmd_lists = joints_lists[i]
-          
+
           # print(type(img_lists),type(cmd_lists))
           # print(img_lists)
           input_data.append(img_lists.tolist() + cmd_lists)
           # print(type(input_data))
-      
+
           if data_length > 0:
             # data len limit
             if len(input_data) <= data_length:
@@ -157,14 +156,11 @@ if __name__ == '__main__':
             # without data len limit
             output = preder.pred_one(input_data)
           # print(output[0].shape)
-      
-          # print("input data : {}".format(input_data[-1][-7:]))
-          print("output data : {}".format(output[0][-1][-7:]))
-          cmd_lists = output[0][-1][-7:].tolist()
-          img_lists = output[0][-1][:-7]
-          # print("output img data : {}".format(output[0][-1][:-7]))
-          # print("original img data : {}".format(np_image[i]))
-      
+
+          print("output data : {}".format(output[0][-1][(-1 * joint_dim):]))
+          cmd_lists = output[0][-1][(-1 * joint_dim):].tolist()
+          img_lists = output[0][-1][:(-1 * joint_dim)]
+
           rgbImg = compresser.dec_one(np.expand_dims(img_lists, axis = 0))[0].transpose(1,2,0)
           # rgbImg *= 255
           frames.append(rgbImg*255)
@@ -172,9 +168,9 @@ if __name__ == '__main__':
             plt.imshow(rgbImg)
             plt.draw() # グラフの描画
             plt.pause(0.01)
-      
+
           reconstructionRgbImg = compresser.dec_one(np.expand_dims(np_image.astype('float32')[i], axis = 0))[0].transpose(1,2,0)
           reconstruction_frames.append(reconstructionRgbImg*255)
-      
+
         save_video(frames, movie_file)
         save_video(reconstruction_frames, reconstruction_movie_file)

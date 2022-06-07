@@ -26,16 +26,15 @@ class LSTMrosbag(object):
         self.model_dir = model_dir
         self.data_dir = data_dir
         self.z_dim = z_dim
-        self.data_dims = self.z_dim + 7
-        print("epoch : {} , hidden_size : {}, model_dir : {}, data_dir : {}".format(self.epoch,self.hidden_size,self.model_dir,self.data_dir))
+        print("epoch : {} , hidden_size : {}, model_dir : {}, data_dir : {}".format(self.epoch, self.hidden_size, self.model_dir, self.data_dir))
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        # self.device = 'cpu'
         print("device : {}".format(self.device))
+
+        self.data_preparation()
         self.net = LSTM(input_size=self.data_dims, output_size=self.data_dims, hidden_size=self.hidden_size, batch_first=True).to(self.device)
         print(self.net)
 
-        self.data_preparation()
-        
+
     def data_preparation(self):
 
         files = os.listdir(self.data_dir)
@@ -56,12 +55,13 @@ class LSTMrosbag(object):
                 for row in reader:
                     row = [float (v) for v in row]
                     joints_lists.append(row)
-            # print(len(image_lists),len(joints_lists))
             joints_lists_list.append(joints_lists)
+            self.joint_dim = len(joints_lists[0])
+            self.data_dims = self.z_dim + self.joint_dim
             if len(np_image)>max_length:
                 max_length=len(np_image)
             print("image data num : {}, joints data num : {}".format(len(np_image),len(joints_lists)))
-            
+
         # make dataset
         self.data_length = max_length
         dataset_x = []
@@ -74,7 +74,7 @@ class LSTMrosbag(object):
             np_data_noise = np.random.multivariate_normal(np.zeros(self.data_dims),np_data_cov,1)*0.1
             # print(np_data_noise.shape)
             list_data = np_data.tolist()
-            # add to dataset           
+            # add to dataset
             # no noise
             dataset_x.append(torch.tensor(list_data[:-1]))
             dataset_t.append(torch.tensor(list_data[1:]))
@@ -95,17 +95,17 @@ class LSTMrosbag(object):
         print(self.test_x.size())
         print(self.test_x.size()[1])
         print("train data num : {}, test data num : {} ".format(len(self.train_x),len(self.test_x)))
-        
+
     def save_model(self):
         model_path = os.path.join(self.model_dir, "model.pt")
         torch.save(self.net.to('cpu').state_dict(), model_path)
         print("model saved in {}".format(model_path))
-        
+
     def train(self):
         batch_size = 10
         optimizer = torch.optim.Adam(self.net.parameters(),lr=0.01)
         criterion = torch.nn.MSELoss()
-        
+
         # train and val
         t_accuracies = []
         v_accuracies = []
@@ -118,7 +118,7 @@ class LSTMrosbag(object):
             for i in range(1):
             # for i in range(len(self.train_x)):
                 optimizer.zero_grad()
-                
+
                 data, label = self.train_x, self.train_t
                 data = data.to(self.device)
 
@@ -153,7 +153,7 @@ class LSTMrosbag(object):
             v_accuracies.append(test_accuracy)
             t_losses.append(running_loss)
             if e%100 == 99:
-                print('%d loss: %.3f, training_accuracy: %.5f, test_accuracy: %.5f' % (
+                print('%d loss: %.6f, training_accuracy: %.5f, test_accuracy: %.5f' % (
                     e + 1, running_loss, training_accuracy, test_accuracy))
 
         fig = plt.figure()
