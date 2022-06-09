@@ -31,8 +31,8 @@ class DCAECompOne(object):
     self.model_dir = model_dir
     self.z_dim = z_dim
     print("model_dir : {}, z_dim: {}".format(self.model_dir, self.z_dim))
-    self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    # self.device = torch.device('cpu')
+    # self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    self.device = torch.device('cpu')
     print("device : {}".format(self.device))
     self.net = DCAE(channel=3, height=224, width=224, z_dim=z_dim).to(self.device)
     print(self.net)
@@ -63,7 +63,8 @@ class LSTMPred(object):
     self.z_dim = z_dim
     self.data_dims = self.z_dim + 8
     print("model_dir : {}, data_dim : {}".format(self.model_dir, self.data_dims))
-    self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    # self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    self.device = torch.device('cpu')
     print("device : {}".format(self.device))
     self.net = LSTM(input_size=self.data_dims, output_size=self.data_dims, hidden_size=hidden_size, batch_first=True).to(self.device)
     print(self.net)

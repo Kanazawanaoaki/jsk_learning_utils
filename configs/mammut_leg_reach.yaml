@@ -51,3 +51,23 @@ image_config:
     y_min: 180
     y_max: 500
     resolution: 224
+initial_joints:
+- {type: prismatic, name: torso_lift_joint, value: 0.299826021751977}
+- {type: revolute, name: l_shoulder_pan_joint, value: 1.3090067861461698}
+- {type: revolute, name: l_shoulder_lift_joint, value: 0.8726545105347081}
+- {type: revolute, name: l_upper_arm_roll_joint, value: 1.9197462652738873}
+- {type: revolute, name: l_elbow_flex_joint, value: -1.9197776104952196}
+- {clamp: false, type: continuous, name: l_forearm_roll_joint, value: -0.34907452633039177}
+- {type: revolute, name: l_wrist_flex_joint, value: -0.174629319211685}
+- {clamp: false, type: continuous, name: l_wrist_roll_joint, value: -0.17452471566711125}
+- {type: revolute, name: r_shoulder_pan_joint, value: -0.5955256904370949}
+- {type: revolute, name: r_shoulder_lift_joint, value: 0.2540558064622659}
+- {type: revolute, name: r_upper_arm_roll_joint, value: -1.092790897185209}
+- {type: revolute, name: r_elbow_flex_joint, value: -1.8453654648440865}
+- {clamp: false, type: continuous, name: r_forearm_roll_joint, value: 4.537321831999568}
+- {type: revolute, name: r_wrist_flex_joint, value: -1.9979183457129095}
+- {clamp: false, type: continuous, name: r_wrist_roll_joint, value: -5.080242687553057}
+- {type: revolute, name: head_pan_joint, value: -9.249018477613404e-05}
+- {type: revolute, name: head_tilt_joint, value: 1.102594301654898}
+- {type: prismatic, name: l_gripper_joint, value: 0.08560051243768599}
+- {type: prismatic, name: r_gripper_joint, value: 0.08675947577263947}

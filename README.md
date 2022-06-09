@@ -82,6 +82,20 @@ roseus pr2_imitation_exec.l
 (start-imitation-cap)
 ```
 
+configを使う例
+```
+# 7 dim actions
+python3 imitation_ros_config.py -c ../configs/config.yaml -z 10 -l 50 -h 256 -m ../project_data/sample_rcup_pick/dcae_z10/ -p ../project_data/sample_rcup_pick/lstm_h256/
+# 8 dim actions
+python3 imitation_ros_config_cap.py -c ../configs/larm_gripper_pr2.yaml -z 10 -l 50 -h 256 -m ../project_data/cap_hook_20220331/dcae_z10/ -p ../project_data/cap_hook_20220331/lstm_h256/
+```
+```
+roscd jsk_learning_utils/euslisp/pr2
+roseus pr2_imitation_exec.l
+(initial-pose-config :config-name "config.yaml")
+(start-imitation-config :config-name "config.yaml" :g-thre 0.5)
+```
+
 ## WIP 石田さんの模倣学習への対応
 金沢の模倣学習の`/scripts/data`のデータを石田さんのmohouのデータの形に変換する．  
 石田さんの模倣学習のみをするなら，
